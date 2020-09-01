@@ -18,9 +18,9 @@ from Engine import Engine
 from msgbox import MessageBox
 
 
-ABOUT = """Fisher 0.1: Kivy interface for the Sunfish chess engine.
-https://github.com/cristivlas/fisher
-https://github.com/thomasahle/sunfish"""
+ABOUT = """Kivy-based interface for the Sunfish engine.
+https://github.com/thomasahle/sunfish
+https://github.com/cristivlas/fisher"""
 
 class Root(GridLayout):
     pass
@@ -128,7 +128,7 @@ class Chess(App):
         self.modal = None
 
     def about(self):
-        self.message_box('About', ABOUT, font_size=14)
+        self.message_box('Fisher v0.1', ABOUT, font_size=14)
 
     @property
     def board(self):
