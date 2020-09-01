@@ -80,10 +80,10 @@ class Engine:
             move = [119 - m for m in move]
         return '{}{}'.format(*(render(m) for m in move))
 
-    def status_message(self, humans_turn):
+    def status_message(self):
         if self.checkmate:
             return 'Checkmate'
-        return 'Your turn' if humans_turn else 'Thinking...'
+        return 'Your turn' if self.humans_turn else 'Thinking...'
 
     @property
     def humans_turn(self):
@@ -94,7 +94,7 @@ class Engine:
         pos = self.hist[-1] if self.hist else None
         if pos and not self.humans_turn:
             pos = pos.rotate()
-        return self.position(pos), self.status_message(self.humans_turn)
+        return self.position(pos), self.status_message()
 
     def can_undo(self):
         return len(self.hist) > 1

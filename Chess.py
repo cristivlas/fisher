@@ -1,7 +1,7 @@
 from kivy.config import Config
-Config.set('graphics', 'multisamples', 8)
+Config.set('graphics', 'multisamples', 4)
 Config.set('graphics', 'resizable', False)
-#Config.set('kivy', 'log_level', 'debug')
+
 from kivy.app import App
 from kivy.atlas import Atlas
 from kivy.core.image import Image as CoreImage
@@ -156,12 +156,22 @@ class Chess(App):
         else:
             Window.size = (600, 720)
         Window.bind(on_request_close=self.on_quit)
+        Window.bind(on_keyboard=self.on_keyboard)
         root = Root()
         root.ids['board'].bind(on_move=self.on_move)
         return root
 
     def on_checkmate(self, winner):
         self.message_box('Checkmate!', '{} won!'.format(winner))
+
+    # Ctrl+z or Android back button
+    def on_keyboard(self, window, keycode1, keycode2, text, modifiers):
+        undo = keycode1 in [27, 1001] if is_mobile() else (keycode1==122 and 'ctrl' in modifiers)
+        if undo:
+            self.undo_move()
+            return True
+        elif keycode1==27:
+            return True # don't close on Escape
 
     def on_move(self, _, move):
         Logger.debug('{}: on_move {}'.format(__name__, move))
@@ -194,7 +204,7 @@ class Chess(App):
             self.start_game()
         self.confirm('Abandon game and start new one', start_new_game)
 
-    def undo_move(self, *args):
+    def undo_move(self, *_):
         if self.engine.can_undo():
             self.confirm('Take back last move', self.engine.undo_move)
 
