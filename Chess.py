@@ -1,7 +1,7 @@
 from kivy.config import Config
 Config.set('graphics', 'multisamples', 8)
 Config.set('graphics', 'resizable', False)
-Config.set('kivy', 'log_level', 'debug')
+#Config.set('kivy', 'log_level', 'debug')
 from kivy.app import App
 from kivy.atlas import Atlas
 from kivy.core.image import Image as CoreImage
@@ -9,7 +9,7 @@ from kivy.core.window import Window
 from kivy.logger import Logger
 from kivy.graphics import *
 from kivy.graphics.texture import Texture
-from kivy.properties import Property
+from kivy.properties import Property, StringProperty
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from utils import is_mobile
@@ -42,13 +42,6 @@ class Style:
 
     def piece_texture(self, p):
         id = Style.piece_name[p.lower()]
-        # texture = self.tex.get(p, None)
-        # if not texture:
-        #     atlas = 'white' if p.isupper() else 'black'
-        #     im = CoreImage(path.join('atlas://', 'style', 'default', atlas, id), mipmap=True)
-        #     texture = im.texture
-        #     self.tex[p]=texture
-        # return texture
         atlas = 'white' if p.isupper() else 'black'
         return path.join('atlas://', 'style', 'default', atlas, id)
 
@@ -56,13 +49,13 @@ class Style:
 class Board(Widget):
     __events__ = ('on_move',)
     pieces = Property([])
+    move = StringProperty('')
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.margin = 10
         self.style = Style()
         self.calc_size()
-        self.move = None
         self.bind(size = self.redraw)
         self.bind(pieces = self.redraw_pieces)
 
@@ -79,16 +72,13 @@ class Board(Widget):
         Logger.trace('{}Board: on_touch_down({} {})'.format(__name__, touch.pos, self.xyo))
         x,y = [(i - j) / self.cell_size for i, j in zip(touch.pos, self.xyo)]
         if 0 <= x < 8 and 0 <= y < 8:
-            rank, file = 1 + int(y), 'abcdefgh'[int(x)]
-            Logger.debug('{}Board: on_touch_down({}{})'.format(__name__, file, rank))
-            if not self.move:
-                self.move = '{}{}'.format(file, rank)
+            move = 'abcdefgh'[int(x)] + str(1 + int(y))
+            self.move += move
+            if len(self.move) < 4:
+                self.select(move)
             else:
-                self.move += '{}{}'.format(file, rank)
-                assert len(self.move)==4
-                move = self.move
-                self.move = None
-                self.dispatch('on_move', move)
+                self.dispatch('on_move', self.move)
+                self.move = ''
 
     def redraw_board(self):
         self.canvas.before.clear()
@@ -104,13 +94,7 @@ class Board(Widget):
         with self.canvas:
             for p,file,rank in self.pieces:
                 texture = self.style.piece_texture(p)
-                col, row = 'abcdefgh'.index(file), int(rank) - 1
-                pos = [o + i * self.cell_size for o, i in zip(self.xyo, [col, row])]
-                if isinstance(texture, str):
-                    Rectangle(pos=pos, size=2*[self.cell_size], source=texture)
-                else:
-                    Rectangle(pos=pos, size=2*[self.cell_size], texture=texture)
-                
+                Rectangle(pos=self.xy(file, rank), size=2*[self.cell_size], source=texture)
 
     def redraw(self, *args):
         Logger.info('{}Board: redraw {}'.format(__name__, args))
@@ -118,6 +102,20 @@ class Board(Widget):
         self.redraw_board()
         self.redraw_pieces()
 
+    def select(self, move):
+        self.redraw_pieces()
+        for pos in move[:2], move[2:]:
+            if not pos:
+                break
+            with self.canvas:
+                x, y = self.xy(*pos)
+                w, h = self.cell_size, self.cell_size
+                Color(0.7, 0.7, 0.7, 1)
+                Line(points=[x, y, x+w, y, x+w, y+h, x, y+h, x, y], width=2)
+
+    def xy(self, file, rank):
+        col, row = 'abcdefgh'.index(file), int(rank) - 1
+        return [o + i * self.cell_size for o, i in zip(self.xyo, [col, row])]
 
 class Chess(App):
     __events__ = ('on_checkmate', 'on_update',)
@@ -149,7 +147,8 @@ class Chess(App):
         if is_mobile():
             Window.maximize()
         else:
-            Window.size = (600, 720)            
+            Window.size = (600, 720)
+        Window.bind(on_request_close=self.on_quit)
         root = Root()
         root.ids['board'].bind(on_move=self.on_move)
         return root
@@ -161,17 +160,22 @@ class Chess(App):
         Logger.debug('{}: on_move {}'.format(__name__, move))
         self.engine.input_move(move)
 
+    def on_quit(self, *_):
+        self.engine.save_game()
+
     def on_start(self, *args):
         Logger.debug('{}: on_start {}'.format(__name__, args))
         self.start_game()
 
-    def on_update(self, pieces, status):
+    def on_update(self, pieces, status, move=None):
         Logger.trace('{}: on_update {}'.format(__name__, pieces))
         self.new_button.disabled = not self.engine.can_undo()
         self.undo_button.disabled = not self.engine.can_undo()
+        self.status_label.text = status
         if pieces:
             self.board.pieces = pieces
-        self.status_label.text = status
+        if move:
+            self.board.select(move)
 
     def start_game(self):
         self.on_update(*self.engine.status())

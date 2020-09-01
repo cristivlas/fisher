@@ -36,29 +36,30 @@ class Engine:
                 pieces.append('{}{}{}'.format(p, 'abcdefgh'[file], 8-rank))
         return pieces
 
+    def game_over(self, winner):
+        self.checkmate = True
+        self.dispatch('on_checkmate', winner)
+
+    def apply_move(self, move):
+        self.hist.append(self.hist[-1].move(move))
+        move = self.render(move)
+        self.dispatch('on_update', *self.status(), move)
+
     def input_move(self, move):
         def process_move(move):
-            if move:
-                self.hist.append(self.hist[-1].move(move))
-                self.dispatch('on_update', *self.status())
-                if self.hist[-1].score <= -MATE_LOWER:
-                    self.checkmate = True
-                    self.dispatch('on_checkmate', 'You')
-                    return
-                # Fire up the engine to look for a move.
-                start = time.time()
-                for depth, move, score in self.searcher.search(self.hist[-1], self.hist):
-                    if time.time() - start > 1:
-                        break
-                Logger.info('{}: depth={}, move={}'.format(__name__, depth, self.render(move)))
-                if score >= MATE_UPPER:
-                    self.checkmate = True
-                    self.dispatch('on_checkmate', 'I')
-                
-                self.hist.append(self.hist[-1].move(move))
-                self.save_game()
-                self.dispatch('on_update', *self.status())
-        
+            self.apply_move(move)
+            if self.hist[-1].score <= -MATE_LOWER:
+                self.game_over('You')
+                return
+            # Fire up the engine to look for a move.
+            start = time.time()
+            for depth, move, score in self.searcher.search(self.hist[-1], self.hist):
+                if time.time() - start > 1:
+                    break
+            if score >= MATE_UPPER:
+                self.game_over('I')
+            self.apply_move(move)
+            self.save_game()
         if self.hist[-1].score <= -MATE_LOWER:
             Logger.debug('{}: You lost!'.format(__name__))
 
@@ -74,9 +75,10 @@ class Engine:
             if m in self.hist[-1].gen_moves():
                 return m
 
-    @staticmethod
-    def render(move):
-        return '{}{}'.format(*(render(119-m) for m in move))
+    def render(self, move):
+        if self.humans_turn:
+            move = [119 - m for m in move]
+        return '{}{}'.format(*(render(m) for m in move))
 
     def status_message(self, humans_turn):
         if self.checkmate:
