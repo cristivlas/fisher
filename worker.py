@@ -78,12 +78,13 @@ class WorkerThreadServer(Locking):
     def __main(self):
         while self.__active:
             work_item = self.__get_message(__IN__)
-            # self.post(work_item())
-            work_item()
+            ret = work_item()
+            if ret:
+                self.post(ret)
 
     ''' post message to outbound queue '''
-    #def post(self, msg, *args):
-    #    self.__put_message(__OUT__, (msg, args))
+    def post(self, msg, *args):
+        self.__put_message(__OUT__, (msg, args))
 
     @Locking.synchronized
     def pause(self):
