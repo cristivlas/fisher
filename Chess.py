@@ -127,7 +127,7 @@ class Chess(App):
         self.modal = None
 
     def about(self):
-        self.message_box('About', ABOUT, font_size=13)
+        self.message_box('About', ABOUT, font_size=14)
 
     @property
     def board(self):
