@@ -1,3 +1,4 @@
+#:kivy 1.11.0
 <Root>:
     cols: 1
     BoxLayout:
@@ -30,12 +31,14 @@
         size_hint: 1, 0.075
 
         Label:
-            size_hint: 0.07, 1
+            size_hint: 0.085, 1
+            font_size: 16
             id: move
 
         Label:
             id: status
-            font_size: 14
+            font_size: 16
+            markup: True
 
     BoxLayout:
         orientation: 'vertical'

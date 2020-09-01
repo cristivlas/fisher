@@ -3,7 +3,6 @@ from kivy.storage.dictstore import DictStore
 from kivy.logger import Logger
 from worker import WorkerThreadServer
 from sunfish.sunfish import (initial, parse, print_pos, render, Position, Searcher, MATE_LOWER,MATE_UPPER)
-from functools import partial
 import re
 import time
 
@@ -15,6 +14,7 @@ class Engine:
         self.__dispatch = dispatch
         self.__worker = WorkerThreadServer()
         self.hist = [Position(initial, 0, (True,True), (True,True), 0, 0)]
+        self.moves = [] # in file-rank notation
         self.searcher = Searcher()        
         self.store = DictStore('fisher.dat')
         self.checkmate = False
@@ -43,15 +43,13 @@ class Engine:
     def apply_move(self, move):
         self.hist.append(self.hist[-1].move(move))
         move = self.render(move)
-        self.dispatch('on_update', *self.status(), move)
+        self.moves.append(move)
+        self.dispatch('on_update', *self.status(), move)        
 
     def input_move(self, move):
-        def process_move(move):
-            self.apply_move(move)
-            if self.hist[-1].score <= -MATE_LOWER:
-                self.game_over('You')
-                return
-            # Fire up the engine to look for a move.
+
+        # Fire up the engine to look for a move -- in the background thread
+        def search_move():
             start = time.time()
             for depth, move, score in self.searcher.search(self.hist[-1], self.hist):
                 if time.time() - start > 1:
@@ -63,17 +61,21 @@ class Engine:
         if self.hist[-1].score <= -MATE_LOWER:
             Logger.debug('{}: You lost!'.format(__name__))
 
-        if not self.checkmate:
-            move = self.parse_and_validate(move)
-            if move:
-                self.__worker.send_message(partial(process_move, move))
+        move = self.parse_and_validate(move)
+        if move:
+            self.apply_move(move)
+            if self.hist[-1].score <= -MATE_LOWER:
+                self.game_over('You')
+            else:
+                self.__worker.send_message(search_move)
 
     def parse_and_validate(self, move):
-        match = re.match('([a-h][1-8])'*2, move)
-        if match:
-            m = parse(match.group(1)), parse(match.group(2))
-            if m in self.hist[-1].gen_moves():
-                return m
+        if not self.checkmate:
+            match = re.match('([a-h][1-8])'*2, move)
+            if match:
+                m = parse(match.group(1)), parse(match.group(2))
+                if m in self.hist[-1].gen_moves():
+                    return m
 
     def render(self, move):
         if self.humans_turn:
@@ -101,17 +103,24 @@ class Engine:
 
     def undo_move(self):
         if self.can_undo():
+            assert len(self.hist) >= 2
             self.checkmate = False
             self.hist = self.hist[:-2]
-            self.dispatch('on_update', *self.status())
+            self.moves = self.moves[:-2]
+            self.dispatch('on_update', *self.status(), self.last_move)
 
+    @property
+    def last_move(self):
+        return self.moves[-1] if self.moves else None
+        
     def load_game(self):
         Logger.debug('{}: save'.format(__name__))
         if self.store.exists('game'):
             data = self.store.get('game')
             self.hist = data.get('hist', [])
-            self.checkmate = data.get('checkmate')
+            self.moves = data.get('moves', [])
+            self.checkmate = data.get('checkmate', False)
 
     def save_game(self):
         Logger.debug('{}: save'.format(__name__))
-        self.store.put('game', hist=self.hist, checkmate=self.checkmate)
+        self.store.put('game', hist=self.hist, moves=self.moves, checkmate=self.checkmate)

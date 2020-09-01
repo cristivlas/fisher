@@ -93,8 +93,10 @@ class Board(Widget):
         self.canvas.clear()
         with self.canvas:
             for p,file,rank in self.pieces:
+                x,y = self.xy(file, rank)
+                w,h = 2 * [self.cell_size]
                 texture = self.style.piece_texture(p)
-                Rectangle(pos=self.xy(file, rank), size=2*[self.cell_size], source=texture)
+                Rectangle(pos=(x+8, y+2), size=(w-16, h-4), source=texture)
 
     def redraw(self, *args):
         Logger.info('{}Board: redraw {}'.format(__name__, args))
@@ -104,13 +106,12 @@ class Board(Widget):
 
     def select(self, move):
         self.redraw_pieces()
-        for pos in move[:2], move[2:]:
-            if not pos:
-                break
+        color = [(0.5, 0.65, 0.5, 1), (0.65, 0.75, 0.65, 1)]
+        for i, pos in enumerate([move[i:i+2] for i in range(0, len(move), 2)]):
             with self.canvas:
-                x, y = self.xy(*pos)
-                w, h = self.cell_size, self.cell_size
-                Color(0.7, 0.7, 0.7, 1)
+                x, y = [j + 2*i for j in self.xy(*pos)]
+                w, h = 2*[self.cell_size-4*i]
+                Color(*color[i])
                 Line(points=[x, y, x+w, y, x+w, y+h, x, y+h, x, y], width=2)
 
     def xy(self, file, rank):
@@ -128,7 +129,7 @@ class Chess(App):
         self.modal = None
 
     def about(self):
-        self.message_box('Fisher v0.1', ABOUT, font_size=14)
+        self.message_box('Fisher v0.1', ABOUT, font_size=16)
 
     @property
     def board(self):
@@ -188,7 +189,7 @@ class Chess(App):
         Logger.trace('{}: on_update {}'.format(__name__, pieces))
         self.new_button.disabled = not self.engine.can_undo()
         self.undo_button.disabled = not self.engine.can_undo()
-        self.status_label.text = status
+        self.status_label.text = '[b][i]{}           [/b][/i]'.format(status)
         if pieces:
             self.board.pieces = pieces
         self.move_label.text = move or ''
@@ -196,7 +197,7 @@ class Chess(App):
             self.board.select(move)
 
     def start_game(self):
-        self.on_update(*self.engine.status())
+        self.on_update(*self.engine.status(), self.engine.last_move)
 
     def new_game(self, *args):
         def start_new_game():
