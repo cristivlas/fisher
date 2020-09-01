@@ -24,11 +24,18 @@
         Button:
             text: 'About'
             on_press: app.about()
-            
-    Label:
-        id: status
+
+    BoxLayout:
+        orientation: 'horizontal'
         size_hint: 1, 0.05
-        font_size: 14
+
+        Label:
+            size_hint: 0.1, 1
+            id: move
+
+        Label:
+            id: status
+            font_size: 14
 
     BoxLayout:
         orientation: 'vertical'

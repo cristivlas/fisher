@@ -87,6 +87,7 @@ class Engine:
 
     @property
     def humans_turn(self):
+        # we start with the empty position
         return len(self.hist) % 2
 
     def status(self):

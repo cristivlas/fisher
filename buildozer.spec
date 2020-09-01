@@ -49,7 +49,7 @@ requirements = python3,kivy,Minimize
 presplash.filename = %(source.dir)s/sunfish/logo/sunfish_large.png
 
 # (str) Icon of the application
-#icon.filename = %(source.dir)s/data/icon.png
+icon.filename = %(source.dir)s/chess.png
 
 # (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
 orientation = portrait

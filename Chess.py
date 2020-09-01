@@ -119,6 +119,9 @@ class Board(Widget):
 
 class Chess(App):
     __events__ = ('on_checkmate', 'on_update',)
+
+    icon = 'chess.png'
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.engine = Engine(self.dispatch)
@@ -138,6 +141,10 @@ class Chess(App):
     @property
     def undo_button(self):
         return self.root.ids['undo']
+
+    @property
+    def move_label(self):
+        return self.root.ids['move']
 
     @property
     def status_label(self):
@@ -174,6 +181,7 @@ class Chess(App):
         self.status_label.text = status
         if pieces:
             self.board.pieces = pieces
+        self.move_label.text = move or ''
         if move:
             self.board.select(move)
 
