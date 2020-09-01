@@ -1,0 +1,6 @@
+sunfish
+__pycache__
+kivy-env
+build-env
+*.dat
+.vscode

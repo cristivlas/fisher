@@ -1,0 +1,43 @@
+<Root>:
+    cols: 1
+    BoxLayout:
+        canvas:
+            Color:
+                rgb: 0.25, 0.25, 0.25
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        orientation: 'horizontal'
+        size_hint: 1, 0.1
+        
+        Button:
+            id: new
+            text: 'New'
+            on_press: app.new_game()
+
+        Button:
+            id: undo     
+            text: 'Undo'
+            on_press: app.undo_move()
+
+        Button:
+            text: 'About'
+            on_press: app.about()
+            
+    Label:
+        id: status
+        size_hint: 1, 0.05
+        font_size: 14
+
+    BoxLayout:
+        orientation: 'vertical'
+        cols: 1
+        canvas:
+            Color:
+                rgb: 0.5, 0.5, 0.5
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Board:
+            id: board
