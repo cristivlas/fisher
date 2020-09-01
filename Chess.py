@@ -28,10 +28,6 @@ class Root(GridLayout):
 
 class Style:
     piece_name = {'p': 'pawn', 'r': 'rook', 'k': 'king', 'q': 'queen', 'b': 'bishop', 'n': 'knight'}
-    def __init__(self):
-        self.black = Atlas('style/default/black.atlas')
-        self.white = Atlas('style/default/white.atlas')
-        self.tex = {}
 
     @property
     def background(self):
