@@ -149,7 +149,7 @@ class Chess(App):
     def on_keyboard(self, window, keycode1, keycode2, text, modifiers):
         undo = keycode1 in [27, 1001] if is_mobile() else (keycode1==122 and 'ctrl' in modifiers)
         if undo:
-            self.undo_move()
+            self.confirm('Take back last move', self.undo_move)
             return True
         elif keycode1==27:
             return True # don't close on Escape
@@ -188,7 +188,8 @@ class Chess(App):
 
     def undo_move(self, *_):
         if self.engine.can_undo():
-            self.confirm('Take back last move', self.engine.undo_move)
+            self.undo_button.disabled = True
+            self.engine.undo_move()
 
     def redo_move(self, *_):
         if self.engine.can_redo():
