@@ -103,10 +103,10 @@ class Engine:
         return self.position(pos), self.status_message()
 
     def can_undo(self):
-        return len(self.moves) > 0
+        return len(self.moves) > 0 and self.humans_turn
 
     def can_redo(self):
-        return len(self.redo) > 0
+        return len(self.redo) > 0 and self.humans_turn
 
     def check_redo(self):
         if self.redo and self.last_move != self.redo[-1]:
