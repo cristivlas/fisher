@@ -3,12 +3,10 @@ Config.set('graphics', 'multisamples', 4)
 Config.set('graphics', 'resizable', False)
 
 from kivy.app import App
-from kivy.atlas import Atlas
 from kivy.core.image import Image as CoreImage
 from kivy.core.window import Window
 from kivy.logger import Logger
 from kivy.graphics import *
-from kivy.graphics.texture import Texture
 from kivy.properties import Property, StringProperty
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
