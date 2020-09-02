@@ -3,7 +3,6 @@ Config.set('graphics', 'multisamples', 4)
 Config.set('graphics', 'resizable', False)
 
 from kivy.app import App
-from kivy.core.image import Image as CoreImage
 from kivy.core.window import Window
 from kivy.logger import Logger
 from kivy.graphics import *
