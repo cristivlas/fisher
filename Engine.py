@@ -102,11 +102,14 @@ class Engine:
             pos = pos.rotate()
         return self.position(pos), self.status_message()
 
+    def __can_use(self, moves_list):
+        return len(moves_list) > 0 and (self.humans_turn or self.checkmate)
+
     def can_undo(self):
-        return len(self.moves) > 0 and self.humans_turn
+        return self.__can_use(self.moves)
 
     def can_redo(self):
-        return len(self.redo) > 0 and self.humans_turn
+        return self.__can_use(self.redo)
 
     def check_redo(self):
         if self.redo and self.last_move != self.redo[-1]:
@@ -116,11 +119,11 @@ class Engine:
     def undo_move(self):
         if self.can_undo():
             assert len(self.hist) >= 2
-            self.checkmate = False
             # Assuming human plays white -- careful if/when implementing a "switch" feature
             # Moves count should be even, unless we lost.
             # Length of position history is odd because of initial empty position.
             assert len(self.hist) % 2 or self.checkmate
+            self.checkmate = False
             n = 1 if len(self.moves) % 2 else 2
             self.hist = self.hist[:-n]
             self.redo.append(self.moves[-n])

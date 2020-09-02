@@ -142,6 +142,7 @@ class Chess(App):
         return root
 
     def on_checkmate(self, winner):
+        self.on_update(*self.engine.status())
         self.message_box('Checkmate!', '{} won!'.format(winner))
 
     # Ctrl+z or Android back button
