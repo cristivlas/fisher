@@ -191,6 +191,7 @@ class Chess(App):
 
     def redo_move(self, *_):
         if self.engine.can_redo():
+            self.redo_button.disabled = True
             self.engine.redo_move()
 
     def message_box(self, title, text, on_close=None, font_size=22):
