@@ -125,27 +125,7 @@ class Chess(App):
         self.modal = None
 
     def about(self):
-        self.message_box('Fisher v0.1', ABOUT, font_size=16)
-
-    @property
-    def board(self):
-        return self.root.ids['board']
-
-    @property
-    def new_button(self):
-        return self.root.ids['new']
-
-    @property
-    def undo_button(self):
-        return self.root.ids['undo']
-
-    @property
-    def move_label(self):
-        return self.root.ids['move']
-
-    @property
-    def status_label(self):
-        return self.root.ids['status']
+        self.message_box('Fisher v0.2', ABOUT, font_size=16)
 
     def build(self):
         if is_mobile():
@@ -155,7 +135,10 @@ class Chess(App):
         Window.bind(on_request_close=self.on_quit)
         Window.bind(on_keyboard=self.on_keyboard)
         root = Root()
-        root.ids['board'].bind(on_move=self.on_move)
+        for id, wid in root.ids.items():
+            cls = str(wid.__class__).split('.')[-1].split('\'')[0].lower()
+            setattr(self, id if id==cls else id + '_' + cls, wid)
+        self.board.bind(on_move=self.on_move)
         return root
 
     def on_checkmate(self, winner):
@@ -185,7 +168,8 @@ class Chess(App):
         Logger.trace('{}: on_update {}'.format(__name__, pieces))
         self.new_button.disabled = not self.engine.can_undo()
         self.undo_button.disabled = not self.engine.can_undo()
-        self.status_label.text = '[b][i]{}           [/b][/i]'.format(status)
+        self.redo_button.disabled = not self.engine.can_redo()
+        self.status_label.text = '[b][i]{}[/b][/i]'.format(status)
         if pieces:
             self.board.pieces = pieces
         self.move_label.text = move or ''
@@ -204,6 +188,10 @@ class Chess(App):
     def undo_move(self, *_):
         if self.engine.can_undo():
             self.confirm('Take back last move', self.engine.undo_move)
+
+    def redo_move(self, *_):
+        if self.engine.can_redo():
+            self.engine.redo_move()
 
     def message_box(self, title, text, on_close=None, font_size=22):
         def modal_done(on_close):

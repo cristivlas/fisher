@@ -15,6 +15,7 @@ class Engine:
         self.__worker = WorkerThreadServer()
         self.hist = [Position(initial, 0, (True,True), (True,True), 0, 0)]
         self.moves = [] # in file-rank notation
+        self.redo = []
         self.searcher = Searcher()        
         self.store = DictStore('fisher.dat')
         self.checkmate = False
@@ -42,8 +43,11 @@ class Engine:
 
     def apply_move(self, move):
         self.hist.append(self.hist[-1].move(move))
-        move = self.render(move)
+        move = self.decode(move)
         self.moves.append(move)
+        # after the machine's move, check if redo list still valid
+        if self.humans_turn:
+            self.check_redo()
         self.dispatch('on_update', *self.status(), move)        
 
     def input_move(self, move):
@@ -77,7 +81,7 @@ class Engine:
                 if m in self.hist[-1].gen_moves():
                     return m
 
-    def render(self, move):
+    def decode(self, move):
         if self.humans_turn:
             move = [119 - m for m in move]
         return '{}{}'.format(*(render(m) for m in move))
@@ -99,15 +103,38 @@ class Engine:
         return self.position(pos), self.status_message()
 
     def can_undo(self):
-        return len(self.hist) > 1
+        return len(self.moves) > 0
+
+    def can_redo(self):
+        return len(self.redo) > 0
+
+    def check_redo(self):
+        if self.redo and self.last_move != self.redo[-1]:
+            # history took a different turn; redo list is invalid
+            self.redo.clear()
 
     def undo_move(self):
         if self.can_undo():
             assert len(self.hist) >= 2
             self.checkmate = False
-            self.hist = self.hist[:-2]
-            self.moves = self.moves[:-2]
+            # Assuming human plays white -- careful if/when implementing a "switch" feature
+            # Moves count should be even, unless we lost.
+            # Length of position history is odd because of initial empty position.
+            assert len(self.hist) % 2 or self.checkmate
+            n = 1 if len(self.moves) % 2 else 2
+            self.hist = self.hist[:-n]
+            self.redo.append(self.moves[-n])
+            self.moves = self.moves[:-n]
+            self.redo.append(self.last_move)
             self.dispatch('on_update', *self.status(), self.last_move)
+
+    def redo_move(self):
+        assert self.redo
+        assert len(self.redo) % 2 == 0
+        move = self.redo.pop()
+        assert move == self.last_move
+        move = self.redo.pop()
+        self.input_move(move)
 
     @property
     def last_move(self):

@@ -23,6 +23,11 @@
             on_press: app.undo_move()
 
         Button:
+            id: redo
+            text: 'Redo'
+            on_press: app.redo_move()
+
+        Button:
             text: 'About'
             on_press: app.about()
 
@@ -31,7 +36,7 @@
         size_hint: 1, 0.075
 
         Label:
-            size_hint: 0.085, 1
+            size_hint: 0.1, 1
             font_size: 16
             id: move
 
@@ -39,6 +44,11 @@
             id: status
             font_size: 16
             markup: True
+
+        # Dummy, just for padding
+        Label:
+            size_hint: 0.1, 1
+
 
     BoxLayout:
         orientation: 'vertical'
