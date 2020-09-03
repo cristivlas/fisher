@@ -22,13 +22,13 @@ source.include_exts = py,png,jpg,kv,atlas
 source.exclude_exts = spec,dat
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-source.exclude_dirs = tests, bin, kivy-env, build-env,__pycache__,p4a-recipes
+source.exclude_dirs = tests, bin, kivy-env, build-env, __pycache__, p4a-recipes
 
 # (list) List of exclusions using pattern matching
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.2
+version = 0.3
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -36,7 +36,7 @@ version = 0.2
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,Minimize
+requirements = python3,python-chess,kivy,Minimize
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes

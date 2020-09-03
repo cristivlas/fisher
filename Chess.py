@@ -100,10 +100,10 @@ class Board(Widget):
     def select(self, move):
         self.redraw_pieces()
         color = [(0.5, 0.65, 0.5, 1), (0.65, 0.75, 0.65, 1)]
-        for i, pos in enumerate([move[i:i+2] for i in range(0, len(move), 2)]):
+        for i, pos in enumerate([move[i:i+2] for i in range(0, min(4, len(move)), 2)]):
             with self.canvas:
-                x, y = [j + 2*i for j in self.xy(*pos)]
-                w, h = 2*[self.cell_size-4*i]
+                x, y = [j for j in self.xy(*pos)]
+                w, h = 2*[self.cell_size]
                 Color(*color[i])
                 Line(points=[x, y, x+w, y, x+w, y+h, x, y+h, x, y], width=2)
 
@@ -112,7 +112,7 @@ class Board(Widget):
         return [o + i * self.cell_size for o, i in zip(self.xyo, [col, row])]
 
 class Chess(App):
-    __events__ = ('on_checkmate', 'on_update',)
+    __events__ = ('on_update',)
 
     icon = 'chess.png'
 
@@ -122,7 +122,7 @@ class Chess(App):
         self.modal = None
 
     def about(self):
-        self.message_box('Fisher v0.2', ABOUT, font_size=16)
+        self.message_box('Fisher v0.3', ABOUT, font_size=16)
 
     def build(self):
         if is_mobile():
@@ -137,10 +137,6 @@ class Chess(App):
             setattr(self, id if id==cls else id + '_' + cls, wid)
         self.board.bind(on_move=self.on_move)
         return root
-
-    def on_checkmate(self, winner):
-        self.on_update(*self.engine.status())
-        self.message_box('Checkmate!', '{} won!'.format(winner))
 
     # Ctrl+z or Android back button
     def on_keyboard(self, window, keycode1, keycode2, text, modifiers):
@@ -175,6 +171,7 @@ class Chess(App):
             self.board.select(move)
 
     def start_game(self):
+        self.engine.start()
         self.on_update(*self.engine.status(), self.engine.last_move)
 
     def new_game(self, *args):
