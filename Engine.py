@@ -8,7 +8,8 @@ import re
 import time
 
 #############################################################################
-# Interface with the sunfish engine
+# Interface with the Sunfish engine -- directly, rather than using either
+# of xboard or uci protocols.
 #############################################################################
 class Engine:
     def __init__(self, dispatch, resume=True):
@@ -55,7 +56,7 @@ class Engine:
                 return move
             if self.humans_turn:
                 break            
-            # Sunfish move deemed illegal by python-chess? likely a promotion            
+            # Sunfish move deemed illegal by python-chess? likely a promotion
             assert not move.promotion
             if not self.humans_turn:
                 move.promotion = chess.QUEEN
@@ -137,20 +138,20 @@ class Engine:
             self.redo.clear()
 
     def undo_move(self):
-        if self.can_undo():
-            assert len(self.hist) >= 2
-            # Assuming human plays white -- careful if/when implementing a "switch" feature
-            # Moves count should be even, unless we lost.
-            # Length of position history is odd because of initial empty position.
-            assert len(self.hist) % 2 or self.is_game_over
-            n = 1 if len(self.moves) % 2 else 2
-            self.hist = self.hist[:-n]
-            self.redo.append(self.moves[-n].uci())
-            while n > 0:
-                self.board.pop()
-                n -= 1
-            self.redo.append(self.last_move)
-            self.dispatch('on_update', *self.status(), self.last_move)
+        assert self.can_undo()
+        assert len(self.hist) >= 2
+        # Assuming human plays white -- careful if/when implementing a "switch" feature
+        # Moves count should be even, unless we lost.
+        # Length of position history is odd because of initial empty position.
+        assert len(self.hist) % 2 or self.is_game_over
+        n = 1 if len(self.moves) % 2 else 2
+        self.hist = self.hist[:-n]
+        self.redo.append(self.moves[-n].uci())
+        while n > 0:
+            self.board.pop()
+            n -= 1
+        self.redo.append(self.last_move)
+        self.dispatch('on_update', *self.status(), self.last_move)
 
     def redo_move(self):
         assert self.redo

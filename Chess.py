@@ -1,11 +1,11 @@
 from kivy.config import Config
-Config.set('graphics', 'multisamples', 4)
 Config.set('graphics', 'resizable', False)
 
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.logger import Logger
 from kivy.graphics import *
+from kivy.graphics.opengl import *
 from kivy.properties import Property, StringProperty
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
@@ -37,7 +37,6 @@ class Style:
         id = Style.piece_name[p.lower()]
         atlas = 'white' if p.isupper() else 'black'
         return path.join('atlas://', 'style', 'default', atlas, id)
-
 
 class Board(Widget):
     __events__ = ('on_move',)
@@ -89,7 +88,7 @@ class Board(Widget):
                 x,y = self.xy(file, rank)
                 w,h = 2 * [self.cell_size]
                 texture = self.style.piece_texture(p)
-                Rectangle(pos=(x+8, y+2), size=(w-16, h-4), source=texture)
+                Rectangle(pos=(x+16, y+2), size=(w-32, h-4), source=texture)
 
     def redraw(self, *args):
         Logger.info('{}.Board: redraw {}'.format(__name__, args))
@@ -97,7 +96,8 @@ class Board(Widget):
         self.redraw_board()
         self.redraw_pieces()
 
-    def select(self, move):
+    # select square(s) in the move -- in uci notation
+    def select(self, move: str):
         self.redraw_pieces()
         color = [(0.5, 0.65, 0.5, 1), (0.65, 0.75, 0.65, 1)]
         for i, pos in enumerate([move[i:i+2] for i in range(0, min(4, len(move)), 2)]):
@@ -141,7 +141,7 @@ class Chess(App):
     # Ctrl+z or Android back button
     def on_keyboard(self, window, keycode1, keycode2, text, modifiers):
         undo = keycode1 in [27, 1001] if is_mobile() else (keycode1==122 and 'ctrl' in modifiers)
-        if undo:
+        if undo and self.engine.can_undo():
             self.confirm('Take back last move', self.undo_move)
             return True
         elif keycode1==27:
