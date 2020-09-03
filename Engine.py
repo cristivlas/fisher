@@ -46,7 +46,10 @@ class Engine:
         return pieces
 
     def validate(self, _move):
-        move = chess.Move.from_uci(_move)        
+        try:
+            move = chess.Move.from_uci(_move)
+        except:
+            return None
         while True:
             if move in self.board.legal_moves:
                 return move
@@ -66,7 +69,7 @@ class Engine:
             # after the machine's move, check if redo list still valid
             if self.humans_turn:
                 self.check_redo()
-            self.dispatch('on_update', *self.status(), move.uci())            
+            self.dispatch('on_update', *self.status(), move.uci())
             if not self.is_game_over:
                 return move
 

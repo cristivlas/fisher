@@ -56,13 +56,13 @@ class Board(Widget):
         self.grid_size = min(i - 2 * self.margin for i in self.size)
         self.cell_size = self.grid_size / 8
         self.xyo = [(i - self.grid_size) / 2 for i in self.size]
-        Logger.info('{}Board: {}, {}x8x8'.format(__name__, self.grid_size, self.cell_size))
+        Logger.info('{}.Board: {:.2f}, {:.2f}x8x8'.format(__name__, self.grid_size, self.cell_size))
     
     def on_move(self, *_):
         pass
 
     def on_touch_down(self, touch):
-        Logger.trace('{}Board: on_touch_down({} {})'.format(__name__, touch.pos, self.xyo))
+        Logger.trace('{}.Board: on_touch_down({} {})'.format(__name__, touch.pos, self.xyo))
         x,y = [(i - j) / self.cell_size for i, j in zip(touch.pos, self.xyo)]
         if 0 <= x < 8 and 0 <= y < 8:
             move = 'abcdefgh'[int(x)] + str(1 + int(y))
@@ -92,7 +92,7 @@ class Board(Widget):
                 Rectangle(pos=(x+8, y+2), size=(w-16, h-4), source=texture)
 
     def redraw(self, *args):
-        Logger.info('{}Board: redraw {}'.format(__name__, args))
+        Logger.info('{}.Board: redraw {}'.format(__name__, args))
         self.calc_size()
         self.redraw_board()
         self.redraw_pieces()
