@@ -38,6 +38,7 @@ class Style:
         atlas = 'white' if p.isupper() else 'black'
         return path.join('atlas://', 'style', 'default', atlas, id)
 
+
 class Board(Widget):
     __events__ = ('on_move',)
     pieces = Property([])
@@ -122,7 +123,7 @@ class Chess(App):
         self.modal = None
 
     def about(self):
-        self.message_box('Fisher v0.3', ABOUT, font_size=16)
+        self.message_box('Fisher v0.4', ABOUT, font_size=16)
 
     def build(self):
         if is_mobile():

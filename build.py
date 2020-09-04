@@ -31,5 +31,6 @@ class Builder(Buildozer):
         return super().cmd(command, **kwargs)
 
 if __name__=='__main__':
-    Builder().run_command(sys.argv[1:])
+    #Builder().run_command(sys.argv[1:])
+    Builder().run_command(['android', 'debug', 'deploy'])
 

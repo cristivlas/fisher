@@ -83,10 +83,7 @@ class Engine:
         if not self.is_game_over:
             match = re.match('([a-h][1-8])'*2, move)
             if match:
-                m = parse(match.group(1)), parse(match.group(2))
-                return m
-                #if m in self.hist[-1].gen_moves():
-                #    return m
+                return parse(match.group(1)), parse(match.group(2))
 
     def decode(self, move):
         if not self.humans_turn:
@@ -97,7 +94,7 @@ class Engine:
     def search_move(self):
         def search():
             start = time.time()
-            for depth, move, score in self.searcher.search(self.hist[-1], self.hist):
+            for _depth, move, _score in self.searcher.search(self.hist[-1], self.hist):
                 if time.time() - start > 1:
                     break
             self.apply_move(move)
