@@ -8,8 +8,7 @@ import re
 import time
 
 #############################################################################
-# Interface with the Sunfish engine -- directly, rather than using either
-# of xboard or uci protocols.
+# Interface with the Sunfish engine directly, no xboard / uci
 #############################################################################
 class Engine:
     def __init__(self, dispatch, resume=True):

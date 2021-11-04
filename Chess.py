@@ -29,6 +29,7 @@ class Style:
     @property
     def background(self):
         return path.join('style', 'default', 'plywood.jpg')
+
     @property
     def board_source(self):
         return path.join('style', 'default', 'board.png')
@@ -57,7 +58,7 @@ class Board(Widget):
         self.cell_size = self.grid_size / 8
         self.xyo = [(i - self.grid_size) / 2 for i in self.size]
         Logger.info('{}.Board: {:.2f}, {:.2f}x8x8'.format(__name__, self.grid_size, self.cell_size))
-    
+
     def on_move(self, *_):
         pass
 
@@ -200,7 +201,7 @@ class Chess(App):
         if not self.modal:
             self.modal = MessageBox(title, text, on_close=lambda *_: modal_done(on_close), font_size=font_size)
 
-    def confirm(self, text, action):        
+    def confirm(self, text, action):
         def callback(msgbox):
             if msgbox.value == 'Yes':
                 return action()
