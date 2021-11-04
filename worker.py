@@ -1,22 +1,25 @@
 import threading
 from collections import deque
 
-
 __IN__, __OUT__ = 0, 1
+
+
+class QueueFull(Exception):
+    pass
 
 
 class Locking:
     def __init__(self):
-        self.__lock = threading.Lock()
+        self._lock = threading.RLock()
 
     def synchronized(f):
         def inner(self, *args):
-            with self.__lock:
+            with self._lock:
                 return f(self, *args)
         return inner
 
 
-class WorkerThreadServer(Locking):
+class WorkerThread(Locking):
     def __init__(self):
         super().__init__()
         self.__thread = threading.Thread(target=self.__main)
@@ -40,17 +43,17 @@ class WorkerThreadServer(Locking):
         return m
 
     @Locking.synchronized
-    def __put_message(self, inout, m):
+    def __put_message(self, inout, m, max_count=None):
         if inout == __IN__:
-            assert self.__active
             if self.__paused:
                 return
         queue = self.__queues[inout]
-        if queue and queue[-1] == m:
-            return # redundant message?
 
-        queue.append(m)
-        self.__events[inout].set()
+        if max_count is None or len(queue) < max_count:
+            queue.append(m)
+            self.__events[inout].set()
+        else:
+            raise QueueFull()
 
     def __get_message(self, inout):
         while True:
@@ -67,24 +70,28 @@ class WorkerThreadServer(Locking):
                 break
             yield msg
 
-    ''' receive message from worker (blocking) '''
+    """ receive message from worker (blocking) """
     def read_message(self):
         return self.__get_message(__OUT__)
 
-    ''' send message to worker '''
+    """ send message to worker """
     def send_message(self, m):
         return self.__put_message(__IN__, m)
 
     def __main(self):
+        for tid, tobj in threading._active.items():
+            if tobj == self.__thread:
+                self.__tid = tid
+
         while self.__active:
             work_item = self.__get_message(__IN__)
             ret = work_item()
             if ret:
                 self.post(ret)
 
-    ''' post message to outbound queue '''
-    def post(self, msg, *args):
-        self.__put_message(__OUT__, (msg, args))
+    """ post message to outbound queue """
+    def post(self, msg, *args, max_count=None):
+        self.__put_message(__OUT__, (msg, args), max_count)
 
     @Locking.synchronized
     def pause(self):
@@ -94,15 +101,23 @@ class WorkerThreadServer(Locking):
         return result
 
     @Locking.synchronized
+    def is_paused(self):
+        return self.__paused
+
+    @Locking.synchronized
     def resume(self):
         if self.__paused:
             self.__paused = False
             self.__events[__IN__].set()
             return True
 
-    @Locking.synchronized
     def stop(self):
-        self.__active = False
+        def _stop():
+            self.__active = False
+
+        self.__paused = False
+        self.send_message(_stop)
+        self.__thread.join()
 
     def __enter__(self):
         return self
@@ -112,11 +127,11 @@ class WorkerThreadServer(Locking):
         self.__thread.join()
         if exception: raise
 
-'''
+"""
 if __name__ == '__main__':
     import random
 
-    with WorkerThreadServer() as worker:            
+    with WorkerThread() as worker:
         worker.send_message(lambda: 'hello')
         print (worker.read_message())
 
@@ -126,7 +141,7 @@ if __name__ == '__main__':
         worker.send_message(lambda: random.choice(range(1, 7)))
         worker.send_message(lambda: random.choice(range(1, 7)))
         worker.send_message(worker.stop)
-        
+
         for m in worker.messages():
             print(m)
-'''
+"""

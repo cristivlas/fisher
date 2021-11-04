@@ -1,7 +1,7 @@
 from kivy.clock import mainthread
 from kivy.storage.dictstore import DictStore
 from kivy.logger import Logger
-from worker import WorkerThreadServer
+from worker import WorkerThread
 from sunfish.sunfish import (initial, parse, render, Position, Searcher, MATE_LOWER,MATE_UPPER)
 import chess
 import re
@@ -13,7 +13,7 @@ import time
 class Engine:
     def __init__(self, dispatch, resume=True):
         self.__dispatch = dispatch
-        self.__worker = WorkerThreadServer()
+        self.__worker = WorkerThread()
         self.hist = [Position(initial, 0, (True,True), (True,True), 0, 0)]
         self.board = chess.Board()
         self.redo = []
